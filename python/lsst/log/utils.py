@@ -21,8 +21,11 @@
 # the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
-from lsst.log import Log
+import os
+import sys
+import threading
 
+from lsst.log import Log
 
 def traceSetAt(name, number):
     """!Adjust logging level to display messages with trace number <= NUMBER
@@ -37,3 +40,62 @@ def traceSetAt(name, number):
     for i in range(6):
         level = Log.INFO if i > number else Log.DEBUG
         Log.getLogger('TRACE%d.%s' % (i, name)).setLevel(level)
+
+
+class LogRedirect:
+    """Redirect a logging file descriptor to a Python stream.
+
+    Parameters
+    ----------
+    fd : `int`
+        File descriptor number, usually 1 for standard out.
+    dest : `io.IOBase`
+        Destination stream, often `sys.stderr` for ipython or Jupyter
+        notebooks.
+    encoding : `str`
+        Text encoding of the data written to fd.
+    errors : `str`
+        Encoding error handling.
+
+    See Also
+    --------
+    https://stackoverflow.com/questions/41216215
+    """
+
+    def __init__(self, fd, dest, encoding="utf-8", errors="strict"):
+        self._fd = fd
+        self._dest = dest
+        # Save original filehandle so we can restore it later.
+        self._filehandle = os.dup(fd)
+ 
+        # Redirect `fd` to the write end of the pipe.
+        pipe_read, pipe_write = os.pipe()
+        os.dup2(pipe_write, fd)
+        os.close(pipe_write)
+
+        # This thread reads from the read end of the pipe.
+        def consumer_thread(f, data):
+            while True:
+                buf = os.read(f, 1024)
+                if not buf: break
+                data.write(buf.decode(encoding, errors))
+            os.close(f)
+            return
+
+        # Spawn consumer thread with the desired destination stream.
+        self._thread = threading.Thread(target=consumer_thread,
+                args=(pipe_read, dest))
+        self._thread.start()
+
+
+    def finish(self):
+        """Stop redirecting output.
+        """
+
+        # Cleanup: flush streams, restore `fd`
+        self._dest.flush()
+        # This dup2 closes the saved file descriptor, which is now the write
+        # end of the pipe, causing the thread's read to terminate
+        os.dup2(self._filehandle, self._fd)
+        os.close(self._filehandle)
+        self._thread.join()
