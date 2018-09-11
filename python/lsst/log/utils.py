@@ -88,7 +88,6 @@ class LogRedirect:
                 args=(pipe_read, dest))
         self._thread.start()
 
-
     def finish(self):
         """Stop redirecting output.
         """
