@@ -27,6 +27,7 @@ import threading
 
 from lsst.log import Log
 
+
 def traceSetAt(name, number):
     """!Adjust logging level to display messages with trace number <= NUMBER
 
@@ -68,7 +69,7 @@ class LogRedirect:
         self._dest = dest
         # Save original filehandle so we can restore it later.
         self._filehandle = os.dup(fd)
- 
+
         # Redirect `fd` to the write end of the pipe.
         pipe_read, pipe_write = os.pipe()
         os.dup2(pipe_write, fd)
@@ -78,14 +79,14 @@ class LogRedirect:
         def consumer_thread(f, data):
             while True:
                 buf = os.read(f, 1024)
-                if not buf: break
+                if not buf:
+                    break
                 data.write(buf.decode(encoding, errors))
             os.close(f)
             return
 
         # Spawn consumer thread with the desired destination stream.
-        self._thread = threading.Thread(target=consumer_thread,
-                args=(pipe_read, dest))
+        self._thread = threading.Thread(target=consumer_thread, args=(pipe_read, dest))
         self._thread.start()
 
     def finish(self):

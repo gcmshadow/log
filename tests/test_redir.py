@@ -71,7 +71,7 @@ class TestRedir(unittest.TestCase):
         with open(self.outputFilename, 'r') as f:
             # strip everything up to first ] to remove timestamp and thread ID
             lines = [l.split(']')[-1].rstrip("\n") for l in f.readlines()]
-            reflines = [l for l in reference.split("\n") if l != ""]
+            reflines = [rl for rl in reference.split("\n") if rl != ""]
             self.maxDiff = None
             self.assertListEqual(lines, reflines)
 
@@ -81,7 +81,7 @@ class TestRedir(unittest.TestCase):
         """
         Test redirection to stream.
         """
-        with TestLog.StdoutCapture(self.outputFilename):
+        with TestRedir.StdoutCapture(self.outputFilename):
             log.configure()
             dest = io.BytesIO()
             lr = log.LogRedirect(1, dest)
@@ -104,6 +104,7 @@ root FATAL: This is FATAL
         self.check("""
 root WARN: Format 3 2.71828 foo
 """)
+
 
 if __name__ == "__main__":
     unittest.main()
