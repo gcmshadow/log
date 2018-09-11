@@ -51,8 +51,8 @@ class LogRedirect:
     fd : `int`
         File descriptor number, usually 1 for standard out, the default log
         output location.
-    dest : `io.IOBase`
-        Destination stream, often `sys.stderr` for ipython or Jupyter
+    dest : `io.TextIOBase`
+        Destination text stream, often `sys.stderr` for ipython or Jupyter
         notebooks.
     encoding : `str`
         Text encoding of the data written to fd.

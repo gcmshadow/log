@@ -31,6 +31,7 @@ import tempfile
 import unittest
 
 import lsst.log as log
+import lsst.log.utils as logUtils
 
 
 class TestRedir(unittest.TestCase):
@@ -83,8 +84,8 @@ class TestRedir(unittest.TestCase):
         """
         with TestRedir.StdoutCapture(self.outputFilename):
             log.configure()
-            dest = io.BytesIO()
-            lr = log.LogRedirect(1, dest)
+            dest = io.StringIO()
+            lr = logUtils.LogRedirect(1, dest)
             log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
             log.info(u"This is unicode INFO")
             log.trace("This is TRACE")
@@ -94,8 +95,7 @@ class TestRedir(unittest.TestCase):
             log.fatal("This is FATAL")
             lr.finish()
             log.warn("Format %d %g %s", 3, 2.71828, "foo")
-        self.assertEqual(dest.getvalue(), """
-root INFO: This is INFO
+        self.assertEqual(dest.getvalue(), """root INFO: This is INFO
 root INFO: This is unicode INFO
 root WARN: This is WARN
 root ERROR: This is ERROR
