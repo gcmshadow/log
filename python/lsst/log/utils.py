@@ -48,7 +48,8 @@ class LogRedirect:
     Parameters
     ----------
     fd : `int`
-        File descriptor number, usually 1 for standard out.
+        File descriptor number, usually 1 for standard out, the default log
+        output location.
     dest : `io.IOBase`
         Destination stream, often `sys.stderr` for ipython or Jupyter
         notebooks.
@@ -62,7 +63,7 @@ class LogRedirect:
     https://stackoverflow.com/questions/41216215
     """
 
-    def __init__(self, fd, dest, encoding="utf-8", errors="strict"):
+    def __init__(self, fd=1, dest=sys.stderr, encoding="utf-8", errors="strict"):
         self._fd = fd
         self._dest = dest
         # Save original filehandle so we can restore it later.
